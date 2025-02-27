@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import RadioGroup from 'react-native-radio-buttons-group';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const UserSignUp = ({ navigation }) => {
+const UserEditProfile = ({ navigation }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [address, setAddress] = useState('');
@@ -207,4 +207,4 @@ const UserSignUp = ({ navigation }) => {
   );
 };
 
-export default UserSignUp
+export default UserEditProfile
