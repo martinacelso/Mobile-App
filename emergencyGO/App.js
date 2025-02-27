@@ -9,6 +9,8 @@ import UserSignUp from './components/User/UserSignUp';
 import UserResetPW from './components/User/UserResetPW';
 import UserCreateNewPW from './components/User/UserCreateNewPW';
 import UserTabs from './components/User/UserTabs';
+import UserAddContact from './components/User/UserAddContact';
+import UserEditProfile from './components/User/UserEditProfile';
 
 const Stack = createNativeStackNavigator();
 
@@ -24,6 +26,8 @@ export default function App() {
         <Stack.Screen name="UserResetPassword" component={UserResetPW} />
         <Stack.Screen name="UserCreateNewPassword" component={UserCreateNewPW} />
         <Stack.Screen name="UserTabs" component={UserTabs} />
+        <Stack.Screen name="UserAddContact" component={UserAddContact}/>
+        <Stack.Screen name="UserEditProfile" component={UserEditProfile}/>
       </Stack.Navigator>
     </NavigationContainer>
   );
