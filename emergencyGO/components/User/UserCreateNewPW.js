@@ -4,14 +4,30 @@ import { MyStyles } from '../AllStyles/MyStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserCreateNewPW = ({ navigation, route }) => {
-  const { identifier } = route.params; // Retrieve email/phone from previous screen
+  const { identifier } = route.params;
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [errorMessage, setErrorMessage] = useState(''); // State for error message
+  const [errorMessage, setErrorMessage] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  const handlePasswordChange = (text) => {
+    setNewPassword(text);
+    
+    if (text.length < 8) {
+      setPasswordError('Password must be at least 8 characters.');
+    } else {
+      setPasswordError('');
+    }
+  };
 
   const handlePasswordReset = async () => {
     if (!newPassword || !confirmPassword) {
       setErrorMessage('Please fill in all fields.');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters.');
       return;
     }
 
@@ -21,18 +37,21 @@ const UserCreateNewPW = ({ navigation, route }) => {
     }
 
     try {
-      const storedUser = await AsyncStorage.getItem('user');
-      if (!storedUser) {
+      const storedUsers = await AsyncStorage.getItem('users');
+      if (!storedUsers) {
         ToastAndroid.show('User not found.', ToastAndroid.SHORT);
         return;
       }
 
-      let user = JSON.parse(storedUser);
-      if (identifier === user.email || identifier === user.mobileNumber) {
-        user.password = newPassword; // Update password
-        await AsyncStorage.setItem('user', JSON.stringify(user)); // Save updated user data
+      let users = JSON.parse(storedUsers);
+      let userIndex = users.findIndex(user => user.email === identifier || user.mobileNumber === identifier);
+
+      if (userIndex !== -1) {
+        users[userIndex].password = newPassword;
+        await AsyncStorage.setItem('users', JSON.stringify(users));
+
         ToastAndroid.show('Password updated successfully!', ToastAndroid.SHORT);
-        navigation.navigate('UserLogin'); // Redirect to login
+        navigation.navigate('UserLogin');
       } else {
         ToastAndroid.show('User not found.', ToastAndroid.SHORT);
       }
@@ -43,9 +62,15 @@ const UserCreateNewPW = ({ navigation, route }) => {
 
   return (
     <View style={MyStyles.container}>
-      <Text style={{ fontSize: 36, fontStyle: 'italic', color: '#8B0000', marginBottom: 20 }}>
-        Emergency<Text style={{ fontWeight: 'bold', fontStyle: 'normal' }}>Go</Text>
-      </Text>
+      <View style={[MyStyles.row, { alignSelf: 'flex-start', marginLeft: 25, marginBottom:5, marginTop:40 }]}>
+        <TouchableOpacity onPress={() => navigation.navigate('UserResetPassword')}>
+          <Image source={require('../../assets/backButton.png')} style={[MyStyles.back, {marginRight:25}]} />
+        </TouchableOpacity>
+        <Text style={{ fontSize: 36, fontStyle: 'italic', color: '#8B0000', marginBottom: 15 }}>
+          Emergency<Text style={{ fontWeight: 'bold', fontStyle: 'normal' }}>Go</Text>
+        </Text>
+      </View>
+
       <Image source={require('../../assets/plain.png')} style={MyStyles.logo} />
 
       <Text style={[MyStyles.title, MyStyles.leftTextAlign]}>Create New Password</Text>
@@ -56,8 +81,10 @@ const UserCreateNewPW = ({ navigation, route }) => {
         placeholder="New Password"
         secureTextEntry
         value={newPassword}
-        onChangeText={setNewPassword}
+        onChangeText={handlePasswordChange}
       />
+      {passwordError ? <Text style={{ color: 'red', marginBottom: 10, marginRight: 50 }}>{passwordError}</Text> : null}
+
       <TextInput
         style={MyStyles.input}
         placeholder="Confirm Password"
@@ -65,16 +92,11 @@ const UserCreateNewPW = ({ navigation, route }) => {
         value={confirmPassword}
         onChangeText={(text) => {
           setConfirmPassword(text);
-          if (newPassword !== text) {
-            setErrorMessage("Passwords don't match.");
-          } else {
-            setErrorMessage('');
-          }
+          setErrorMessage(newPassword !== text ? "Passwords don't match." : '');
         }}
       />
 
-      {/* Error message display */}
-      {errorMessage ? <Text style={{ color: 'red', marginBottom: 10 }}>{errorMessage}</Text> : null}
+      {errorMessage ? <Text style={{ color: 'red', marginBottom: 10, marginRight: 150 }}>{errorMessage}</Text> : null}
 
       <TouchableOpacity onPress={handlePasswordReset} style={MyStyles.Sbutton}>
         <Text style={MyStyles.buttonText}>Create</Text>
