@@ -4,31 +4,34 @@ import { MyStyles } from '../AllStyles/MyStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserLogin = ({ navigation }) => {
-  const [email, setEmail] = useState('');
+  const [emailOrMobile, setEmailOrMobile] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      ToastAndroid.show('Please enter your email and password', ToastAndroid.SHORT);
+    if (!emailOrMobile || !password) {
+      setErrorMessage('Please fill in all fields.');
       return;
     }
 
-    try {
-      const storedUser = await AsyncStorage.getItem('user');
-      if (!storedUser) {
-        ToastAndroid.show('No account found. Please sign up.', ToastAndroid.SHORT);
-        return;
-      }
+    const storedUsers = await AsyncStorage.getItem('users');
+    const users = storedUsers ? JSON.parse(storedUsers) : [];
 
-      const user = JSON.parse(storedUser);
-      if ((email === user.email || email === user.mobileNumber) && password === user.password) {
-        ToastAndroid.show('Login Successful!', ToastAndroid.SHORT);
-        navigation.navigate('UserTabs', { user });
-      } else {
-        ToastAndroid.show('Invalid Credentials', ToastAndroid.SHORT);
-      }
-    } catch (error) {
-      console.error('Error during login:', error);
+    const foundUser = users.find(user => 
+      user.email === emailOrMobile || user.mobileNumber === emailOrMobile
+    );
+
+    if (!foundUser) {
+      setErrorMessage('Account not found.');
+      return;
+    }
+
+    if (foundUser.password === password) {
+      setErrorMessage('');
+      ToastAndroid.show('Login Successful!', ToastAndroid.SHORT);
+      navigation.navigate('UserTabs');
+    } else {
+      setErrorMessage('Incorrect password.');
     }
   };
 
@@ -44,24 +47,36 @@ const UserLogin = ({ navigation }) => {
 
       <TextInput
         style={MyStyles.input}
-        placeholder="Email/Mobile Number"
+        placeholder="Email Address/Mobile Number"
         keyboardType="email-address"
         placeholderTextColor="#ac2e39"
-        value={email}
-        onChangeText={setEmail}
+        value={emailOrMobile}
+        onChangeText={(text) => {
+          setEmailOrMobile(text);
+          setErrorMessage('');
+        }}
       />
+      
       <TextInput
         style={MyStyles.input}
         placeholder="Password"
         secureTextEntry
         placeholderTextColor="#ac2e39"
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(text) => {
+        setPassword(text);
+        setErrorMessage('');
+        }}
       />
 
       <View style={{ width: "85%", alignSelf: 'flex-end' }}>
+      {errorMessage ? (
+        <Text style={{ color: 'red', alignSelf: 'flex-start', marginLeft: '-8%', marginBottom: -18 }}>
+          {errorMessage}
+        </Text>
+      ) : null}
         <TouchableOpacity onPress={() => navigation.navigate('UserResetPassword')}>
-          <Text style={{ fontSize: 14, color: '#8B0000', marginBottom: 10, marginRight: 30, textAlign: 'right' }}>
+          <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#8B0000', marginBottom: 10, marginRight: 30, textAlign: 'right' }}>
             Forgot password?
           </Text>
         </TouchableOpacity>
@@ -81,4 +96,4 @@ const UserLogin = ({ navigation }) => {
   );
 };
 
-export default UserLogin;
+export default UserLogin
