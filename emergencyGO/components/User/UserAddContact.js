@@ -120,4 +120,4 @@ const UserAddContact = ({ navigation, route }) => {
   );
 };
 
-export default UserAddContact;
+export default UserAddContact

@@ -150,9 +150,9 @@ const Contacts = ({ navigation }) => {
 
   const handleContactOptions = (contactId) => {
     if (selectedContactId === contactId) {
-      setSelectedContactId(null);
+      setSelectedContactId(null); // Deselect the contact
     } else {
-      setSelectedContactId(contactId);
+      setSelectedContactId(contactId); // Select the new contact
     }
   };
   

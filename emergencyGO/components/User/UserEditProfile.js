@@ -1,210 +1,355 @@
-import React from 'react';
-import { View, Text, TextInput, Image, TouchableOpacity, ScrollView, ToastAndroid } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Image, TouchableOpacity, ScrollView, ToastAndroid, Alert } from 'react-native';
 import { MyStyles } from '../AllStyles/MyStyles';
-import { useState, useEffect } from 'react';
-import RadioGroup from 'react-native-radio-buttons-group';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UserEditProfile = ({ navigation }) => {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [address, setAddress] = useState('');
-  const [dob, setDob] = useState(new Date());
-  const [selectedGender, setSelectedGender] = useState(null);
-  const genderOptions = [
-    { id: '1', label: 'Male', value: 'Male' },
-    { id: '2', label: 'Female', value: 'Female' },
-    { id: '3', label: 'Other', value: 'Other' }
-  ];
-  const [email, setEmail] = useState('');
-  const [mobileNumber, setMobileNumber] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordMismatch, setPasswordMismatch] = useState(false);
+  const [user, setUser] = useState(null);
+  const [updateFirstName, setUpdatedFirstName] = useState('');
+  const [updateLastName, setUpdatedLastName] = useState('');
+  const [updateAddress, setUpdatedAddress] = useState('');
+  const [updateDob, setUpdatedDob] = useState('');
+  const [updateEmail, setUpdatedEmail] = useState('');
+  const [updateMobileNumber, setUpdatedMobileNumber] = useState('');
+  const [updatePassword, setUpdatedPassword] = useState('');
+  const [updateConfirmPassword, setUpdatedConfirmPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [updatedPasswordMismatch, setUpdatedPasswordMismatch] = useState(false);
+  const [isPasswordDisabled, setIsPasswordDisabled] = useState(true);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordLengthError, setPasswordLengthError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [mobileError, setMobileError] = useState('');
+
+  const [otp, setOtp] = useState(null);
+  const [enteredOtp, setEnteredOtp] = useState('');
+  const [otpErrorMessage, setOtpErrorMessage] = useState('');
+  const [otpSaveErrorMessage, setOtpSaveErrorMessage] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+
+  const [isResendDisabled, setIsResendDisabled] = useState(false);
+  const [resendTimer, setResendTimer] = useState(30);
 
   useEffect(() => {
-    if (password && confirmPassword && password !== confirmPassword) {
-      setPasswordMismatch(true);
-    } else {
-      setPasswordMismatch(false);
-    }
-  }, [password, confirmPassword]);
-
-  const handleSignUp = async () => {
-    if (!firstName || !lastName || !email || !password || !confirmPassword || !mobileNumber || !selectedGender || !dob || !address) {
-      ToastAndroid.show('Please fill in all fields', ToastAndroid.SHORT);
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      ToastAndroid.show('Passwords do not match', ToastAndroid.SHORT);
-      return;
-    }
-
-    const userData = {
-      fullName: `${firstName} ${lastName}`,
-      address,
-      dob,
-      gender: selectedGender,
-      email,
-      mobileNumber,
-      password,
-      confirmPassword,
+    const fetchUser = async () => {
+      const storedUser = await AsyncStorage.getItem('loggedInUser');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        setUpdatedFirstName(parsedUser.firstName);
+        setUpdatedLastName(parsedUser.lastName);
+        setUpdatedAddress(parsedUser.address);
+        setUpdatedDob(parsedUser.dob);
+        setUpdatedEmail(parsedUser.email);
+        setUpdatedMobileNumber(parsedUser.mobileNumber);
+      }
     };
+    fetchUser();
+  }, []);
 
+  useEffect(() => {
+    if (updatePassword && updateConfirmPassword && updatePassword !== updateConfirmPassword) {
+      setUpdatedPasswordMismatch(true);
+    } else {
+      setUpdatedPasswordMismatch(false);
+    }
+  }, [updatePassword, updateConfirmPassword]);
+
+  const generateOtp = () => {
+    if (isResendDisabled) return;
+
+    const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    setOtp(generatedOtp);
+    Alert.alert('OTP Sent', `Your OTP is: ${generatedOtp}`, [{ text: 'OK' }]);
+    setOtpErrorMessage(''); 
+    setOtpSent(true);
+
+    setIsResendDisabled(true);
+    setResendTimer(30);
+
+    const countdown = setInterval(() => {
+      setResendTimer((prevTimer) => {
+        if (prevTimer === 1) {
+          clearInterval(countdown);
+          setIsResendDisabled(false);
+        }
+        return prevTimer - 1;
+      });
+    }, 1000);
+  };
+
+  const checkIfEmailExists = async (email) => {
+    const existingUsers = [
+      { email: 'existinguser@example.com', mobileNumber: '1234567890' },
+    ];
+    return existingUsers.some(user => user.email === email);
+  };
+  
+  const checkIfMobileNumberExists = async (mobileNumber) => {
+    const existingUsers = [
+      { email: 'existinguser@example.com', mobileNumber: '1234567890' },
+    ];
+    return existingUsers.some(user => user.mobileNumber === mobileNumber);
+  };
+  
+
+  const handleEditProfile = async () => {
+    if (!updateFirstName || !updateLastName || !updateEmail || !updateMobileNumber) {
+      setOtpErrorMessage('Please fill in all required fields.');
+      return;
+    }
+  
+    const isEmailTaken = await checkIfEmailExists(updateEmail);
+    const isMobileTaken = await checkIfMobileNumberExists(updateMobileNumber);
+  
+    if (isEmailTaken) {
+      setEmailError('This email is already in use.');
+    } else {
+      setEmailError('');
+    }
+  
+    if (isMobileTaken) {
+      setMobileError('This mobile number is already in use.');
+    } else {
+      setMobileError('');
+    }
+  
+    if (isEmailTaken || isMobileTaken) {
+      return;
+    }
+  
+    if (updatePassword && updatePassword !== updateConfirmPassword) {
+      setOtpErrorMessage('Passwords do not match.');
+      return;
+    }
+  
+    if (otp === null) {
+      setOtpErrorMessage('Please press "Send Code" to receive the OTP.');
+      return;
+    }
+  
+    if (enteredOtp !== otp) {
+      setOtpErrorMessage('Invalid OTP. Please try again.');
+      return;
+    }
+  
+    const updatedUserData = {
+      firstName: updateFirstName,
+      lastName: updateLastName,
+      fullName: `${updateFirstName} ${updateLastName}`,
+      address: updateAddress,
+      dob: updateDob,
+      gender: user.gender,
+      email: updateEmail,
+      mobileNumber: updateMobileNumber,
+      password: updatePassword,
+    };
+  
     try {
-      await AsyncStorage.setItem('user', JSON.stringify(userData));
-      ToastAndroid.show('Account Created Successfully!', ToastAndroid.SHORT);
-      navigation.navigate('UserLogin');
+      await AsyncStorage.setItem('loggedInUser', JSON.stringify(updatedUserData));
+      ToastAndroid.show('Profile updated successfully!', ToastAndroid.SHORT);
+      navigation.navigate('UserTabs');
     } catch (error) {
       console.error('Error saving user data:', error);
     }
   };
 
-    return (
+  const handleSaveChanges = () => {
+    if (!enteredOtp) {
+      setOtpSaveErrorMessage('Save changes by entering the OTP sent to your mobile number. Press the [Send Code] button now.');
+      return;
+    }
+    handleEditProfile();
+  };
 
-    <ScrollView contentContainerStyle={{ paddingBottom: 20, alignItems: 'center', justifyContent: 'center', flexDirection: 'column', }}>
-      <View style={[MyStyles.row, {marginBottom:10, marginTop:60, marginRight:85 }]}>
-          <TouchableOpacity onPress={() => navigation.navigate('UserTabs')}>
-              <Image source={require('../../assets/backButton.png')} style={[MyStyles.back, {marginRight:65}]} />
-            </TouchableOpacity>
-            <Text style={[MyStyles.title, { marginBottom: 10 }]}>Edit Profile</Text>
-          </View>
+  const handlePasswordValidation = () => {
+    if (currentPassword !== user.password) {
+      setPasswordError('Incorrect password. Please try again.');
+    } else {
+      setPasswordError('');
+    }
+  
+    if (updatePassword && updatePassword.length < 8) {
+      setPasswordLengthError('Password must be at least 8 characters long.');
+    } else {
+      setPasswordLengthError('');
+    }
+  };  
 
-          <Image source={require('../../assets/defaultUserPFP.png')} style={MyStyles.userPFP} />
+  if (!user) {
+    return <Text>Loading...</Text>;
+  }
 
-        <View style={MyStyles.row}>
-          <TextInput  style={{ width: 149, 
-            height: 45, 
-            borderWidth: 1, 
-            borderColor: '#8B0000', 
-            paddingLeft: 10,
-            marginRight:5, 
-            marginBottom: 10, 
-            backgroundColor: 'white',
-            color: '#ac2e39',
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 5,
-            elevation: 5,
-            }} 
-            placeholder="First Name" 
-            placeholderTextColor="#ac2e39"
-            value={firstName}
-            onChangeText={setFirstName}
-          />
-          <TextInput style={{width: 149, 
-            height: 45, 
-            borderWidth: 1, 
-            borderColor: '#8B0000', 
-            paddingLeft: 10, 
-            marginBottom: 10, 
-            backgroundColor: 'white',
-            color: '#ac2e39',
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 5,
-            elevation: 5,
-            }} 
-            placeholder="Last Name"
-            placeholderTextColor="#ac2e39"
-            value={lastName}
-            onChangeText={setLastName}
-          />
-        </View>
+  return (
+    <ScrollView contentContainerStyle={{ paddingBottom: 20, alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+      <View style={[MyStyles.row, { alignSelf: 'flex-start', marginLeft: 25, marginBottom: 15, marginTop: 50 }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Image source={require('../../assets/backButton.png')} style={[MyStyles.back, { marginRight: 10 }]} />
+        </TouchableOpacity>
+        <Image source={require('../../assets/plain.png')} style={MyStyles.logo2} />
+        <Text style={{ fontSize: 30, fontStyle: 'italic', color: '#8B0000', marginBottom: 10 }}>
+          Emergency<Text style={{ fontWeight: 'bold', fontStyle: 'normal' }}>Go</Text>
+        </Text>
+      </View>
 
-        <TextInput style={MyStyles.input} 
-          placeholder="Address" 
+      <Text style={[MyStyles.title, { marginBottom: 10 }]}>Edit Profile</Text>
+
+      <Image source={require('../../assets/defaultUserPFP.png')} style={MyStyles.userPFP} />
+
+      <View style={MyStyles.row}>
+        <TextInput
+          style={{ width: 149, height: 45, borderWidth: 1, borderColor: '#8B0000', paddingLeft: 10, marginRight: 5, marginBottom: 10, backgroundColor: 'white', color: '#ac2e39', shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 5 }}
+          placeholder="First Name"
           placeholderTextColor="#ac2e39"
-          value={address}
-          onChangeText={setAddress} 
+          value={updateFirstName}
+          onChangeText={setUpdatedFirstName}
         />
+        <TextInput
+          style={{ width: 149, height: 45, borderWidth: 1, borderColor: '#8B0000', paddingLeft: 10, marginRight: 5, marginBottom: 10, backgroundColor: 'white', color: '#ac2e39', shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 5 }}
+          placeholder="Last Name"
+          placeholderTextColor="#ac2e39"
+          value={updateLastName}
+          onChangeText={setUpdatedLastName}
+        />
+      </View>
 
-        <TextInput style={MyStyles.input} 
-          placeholder="Date of Birth" 
-          placeholderTextColor="#ac2e39" 
-          value={dob} 
-          onChangeText={setDob}
-        />
-            
-        <Text style={[MyStyles.leftTextAlign, { color: '#ac2e39', marginBottom: 5 }]}>Gender</Text>
-        <View style={{borderWidth: 1, borderColor: '#8B0000', padding: 5, marginBottom: 10, height: 45, width: 305, backgroundColor: 'white'}}>
-          <RadioGroup
-            radioButtons={genderOptions.map(option => ({
-              ...option,
-              labelStyle: { color: '#ac2e39' },
-              color: '#ac2e39',
-            }))}
-            onPress={(id) => {
-              const selectedOption = genderOptions.find(option => option.id === id);
-              setSelectedGender(selectedOption ? selectedOption.value : null);
+      <TextInput
+        style={MyStyles.input}
+        placeholder="Address (Optional)"
+        placeholderTextColor="#ac2e39"
+        value={updateAddress}
+        onChangeText={setUpdatedAddress}
+      />
+
+      <TextInput
+        style={[MyStyles.input, { backgroundColor: '#f0e1e1' }]}
+
+        placeholder="Date of Birth"
+        placeholderTextColor="#ac2e39"
+        value={updateDob}
+        editable={false}
+      />
+
+      <TextInput
+        style={[MyStyles.input, { backgroundColor: '#f0e1e1' }]}
+
+        placeholder="Gender"
+        placeholderTextColor="#ac2e39"
+        value={user.gender}
+        editable={false}
+      />
+
+      <TextInput
+        style={MyStyles.input}
+        placeholder="Email"
+        keyboardType="email-address"
+        placeholderTextColor="#ac2e39"
+        value={updateEmail}
+        onChangeText={setUpdatedEmail}
+      />
+
+      <TextInput
+        style={MyStyles.input}
+        placeholder="Enter current password to change"
+        secureTextEntry
+        placeholderTextColor="#ac2e39"
+        value={currentPassword}
+        onChangeText={(text) => {
+          setCurrentPassword(text);
+          setIsPasswordDisabled(text === '');
+        }}
+        onBlur={handlePasswordValidation}
+      />
+
+      {currentPassword !== '' && currentPassword === user.password && (
+        <>
+          <TextInput
+            style={[MyStyles.input, { backgroundColor: isPasswordDisabled ? '#f0e1e1' : 'white' }]}
+            placeholder="Create New Password"
+            secureTextEntry
+            placeholderTextColor="#ac2e39"
+            value={updatePassword}
+            onChangeText={(text) => {
+              setUpdatedPassword(text);
+              handlePasswordValidation();
+              setIsPasswordDisabled(text === '');
             }}
-            selectedId={selectedGender ? genderOptions.find(option => option.value === selectedGender)?.id : null}
-            layout="row"
+            editable={!isPasswordDisabled}
           />
-        </View>
+          {passwordLengthError && (
+            <Text style={{ color: 'red', fontSize: 14, marginBottom: 10, marginRight: 5 }}>
+              {passwordLengthError}
+            </Text>
+          )}
 
-        <TextInput style={MyStyles.input} 
-          placeholder="Email" 
-          keyboardType="email-address" 
-          placeholderTextColor="#ac2e39"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput style={MyStyles.input} 
-          placeholder="Create Password" 
-          secureTextEntry 
-          placeholderTextColor="#ac2e39"
-          value={password}
-          onChangeText={setPassword}
-        />
-        <TextInput style={MyStyles.input} 
-          placeholder="Confirm Password" 
-          secureTextEntry 
-          placeholderTextColor="#ac2e39"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
-
-{passwordMismatch && (
-        <Text style={{ color: 'red', marginBottom: 10 }}>Passwords do not match</Text>
+          <TextInput
+            style={[MyStyles.input, { backgroundColor: isPasswordDisabled ? '#f0e1e1' : 'white' }]}
+            placeholder="Confirm New Password"
+            secureTextEntry
+            placeholderTextColor="#ac2e39"
+            value={updateConfirmPassword}
+            onChangeText={setUpdatedConfirmPassword}
+            editable={!isPasswordDisabled}
+          />
+          {updatedPasswordMismatch && (
+            <Text style={{ color: 'red', fontSize: 12, marginBottom: 10, marginRight: 165 }}>Passwords do not match</Text>
+          )}
+        </>
       )}
 
-        <View style={MyStyles.row}>
-          <TextInput style={{ width: 210, 
-            height: 45, 
-            borderWidth: 1, 
-            borderColor: '#8B0000', 
-            paddingLeft: 10, 
-            marginBottom: 10, 
-            backgroundColor: 'white',
-            color: '#ac2e39',
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 5,
-            elevation: 5,
-            }}
-            placeholder="Mobile Number" 
-            keyboardType="numeric"
-            placeholderTextColor="#ac2e39"
-            value={mobileNumber}
-            onChangeText={setMobileNumber} 
-          />
-          <TouchableOpacity style={MyStyles.sendButton}>
-              <Text style={MyStyles.sendButtonText}>Send Code</Text>
-          </TouchableOpacity>
-        </View>
+      {passwordError ? (
+        <Text style={{ color: 'red', fontSize: 12, marginBottom: 10, marginRight: 100 }}>
+          {passwordError}
+        </Text>
+      ) : null}
 
-        <TextInput style={MyStyles.input} placeholder="OTP Code" keyboardType="numeric" placeholderTextColor="#ac2e39"/>
-        <TouchableOpacity onPress={handleSignUp} style={MyStyles.Sbutton}>
-            <Text style={MyStyles.buttonText}>Save Changes</Text>
+      <View style={MyStyles.row}>
+        <TextInput
+          style={{ width: 213, height: 45, borderWidth: 1, borderColor: '#8B0000', paddingLeft: 10, marginRight: 5, marginBottom: 10, backgroundColor: 'white', color: '#ac2e39', shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 5 }}
+          placeholder="Mobile Number"
+          keyboardType="numeric"
+          placeholderTextColor="#ac2e39"
+          value={updateMobileNumber}
+          onChangeText={setUpdatedMobileNumber}
+        />
+        <TouchableOpacity
+          onPress={generateOtp}
+          style={[MyStyles.sendButton, { backgroundColor: isResendDisabled ? '#c68286' : '#8B0000' }]}
+          disabled={isResendDisabled}
+        >
+          <Text style={MyStyles.sendButtonText}>
+            {isResendDisabled ? `Resend in ${resendTimer}s` : 'Send Code'}
+          </Text>
         </TouchableOpacity>
+      </View>
 
+      {otpSent && (
+        <TextInput
+          style={MyStyles.input}
+          placeholder="OTP Code"
+          keyboardType="numeric"
+          placeholderTextColor="#ac2e39"
+          value={enteredOtp}
+          onChangeText={setEnteredOtp}
+        />
+      )}
+
+      {otpErrorMessage ? (
+        <Text style={{ color: 'red', fontSize: 12, marginBottom: 10 }}>
+          {otpErrorMessage}
+        </Text>
+      ) : null}
+
+      <TouchableOpacity onPress={handleSaveChanges} style={MyStyles.Sbutton}>
+        <Text style={MyStyles.buttonText}>Save Changes</Text>
+      </TouchableOpacity>
+      {otpSaveErrorMessage ? (
+        <Text style={{ color: 'red', fontSize: 14, marginBottom: 10, textAlign: 'center' }}>
+          {otpSaveErrorMessage}
+        </Text>
+      ) : null}
     </ScrollView>
   );
 };
 
-export default UserEditProfile
+export default UserEditProfile;
