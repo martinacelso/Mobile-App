@@ -6,6 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="77d98b7e-b2b8-4e0b-b3d1-e896f46fd36e" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/emergencyGO/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/emergencyGO/App.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/emergencyGO/components/AllStyles/MyStyles.js" beforeDir="false" afterPath="$PROJECT_DIR$/emergencyGO/components/AllStyles/MyStyles.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/emergencyGO/components/User/UserEditProfile.js" beforeDir="false" afterPath="$PROJECT_DIR$/emergencyGO/components/User/UserEditProfile.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/emergencyGO/components/User/UserTabs.js" beforeDir="false" afterPath="$PROJECT_DIR$/emergencyGO/components/User/UserTabs.js" afterDir="false" />
     </list>

@@ -286,7 +286,6 @@ export const MyStyles = StyleSheet.create({
         paddingTop: 20,
         backgroundColor: '#fff',
     },
-    
     contactCard: {
         width: '85%',
         backgroundColor: '#ffe6e6',
@@ -300,7 +299,6 @@ export const MyStyles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 5,
     },
-    
     contactImage: {
         width: 55,
         height: 55,
@@ -309,11 +307,9 @@ export const MyStyles = StyleSheet.create({
         borderColor: '#8B0000',
         marginRight: 10,
     },
-    
     contactInfo: {
         flex: 1,
     },
-    
     contactName: {
         fontSize: 18,
         fontWeight: 'bold',
@@ -374,6 +370,13 @@ export const MyStyles = StyleSheet.create({
         height: 25,
         marginRight: 15,
         marginBottom: 15,
+        borderColor:'#8B0000',
+    },
+    option: {
+        width: 5,
+        height: 15,
+        alignSelf: 'flex-end',
+        marginLeft:50,
         borderColor:'#8B0000',
     },
 });
