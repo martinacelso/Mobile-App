@@ -138,24 +138,34 @@ const Contacts = ({ navigation }) => {
 
   useEffect(() => {
     const fetchContacts = async () => {
-      const storedContacts = await AsyncStorage.getItem('contacts');
-      if (storedContacts) {
-        setContactPerson(JSON.parse(storedContacts));
+      const storedUser = await AsyncStorage.getItem('loggedInUser');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        setContactPerson([]);
+  
+        const userContactsKey = `${user.id}_contacts`;
+  
+        const storedContacts = await AsyncStorage.getItem(userContactsKey);
+        if (storedContacts) {
+          const contacts = JSON.parse(storedContacts);
+  
+          const userContacts = contacts.filter(contact => contact.userId === user.id);
+          setContactPerson(userContacts);
+        }
       }
     };
-
+  
     const unsubscribe = navigation.addListener('focus', fetchContacts);
     return () => unsubscribe();
-  }, [navigation]);
+  }, [navigation]);  
 
   const handleContactOptions = (contactId) => {
     if (selectedContactId === contactId) {
-      setSelectedContactId(null); // Deselect the contact
+      setSelectedContactId(null);
     } else {
-      setSelectedContactId(contactId); // Select the new contact
+      setSelectedContactId(contactId);
     }
   };
-  
 
   const handleEditContact = (contactId) => {
     const contact = contactPerson.find(c => c.id === contactId);
@@ -166,12 +176,17 @@ const Contacts = ({ navigation }) => {
 
   const handleDeleteContact = async (contactId) => {
     console.log("Delete clicked for contact ID: ", contactId);
-
+    
     const updatedContacts = contactPerson.filter(contact => contact.id !== contactId);
     setContactPerson(updatedContacts);
-
-    await AsyncStorage.setItem('contacts', JSON.stringify(updatedContacts));
+  
+    const storedUser = await AsyncStorage.getItem('loggedInUser');
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      await AsyncStorage.setItem(`${user.id}_contacts`, JSON.stringify(updatedContacts));
+    }
   };
+  
 
   return (
     <View style={MyStyles.container}>
@@ -215,16 +230,15 @@ const Contacts = ({ navigation }) => {
                           </TouchableOpacity>
                         </>
                       ) : (
-
                         <>
                           <TouchableOpacity
-                            onPress={() => {/* Call Logic */}}
+                            onPress={() => {/* Call Page*/}}
                             style={[MyStyles.cmButton2, { backgroundColor: '#8B0000' }]}>
                             <Text style={{ color: '#FFF', fontWeight: 'bold', textAlign: 'center' }}>Call</Text>
                           </TouchableOpacity>
 
                           <TouchableOpacity
-                            onPress={() => {/* Message Logic */}}
+                            onPress={() => {/* Message Page*/}}
                             style={[MyStyles.cmButton2, { backgroundColor: '#c68286' }]}>
                             <Text style={{ color: '#FFF', fontWeight: 'bold', textAlign: 'center' }}>Message</Text>
                           </TouchableOpacity>
@@ -249,7 +263,6 @@ const Contacts = ({ navigation }) => {
 };
 
 
-
 /////////////////////////////FOR PROFILE TAB
 const Profile = ({ navigation }) => {
   const [user, setUser] = useState(null);
@@ -266,8 +279,18 @@ const Profile = ({ navigation }) => {
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem('loggedInUser');
+    
+    const storedUser = await AsyncStorage.getItem('loggedInUser');
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      const userContactsKey = `${user.id}_contacts`;
+      await AsyncStorage.removeItem(userContactsKey);
+    }
+  
+    ToastAndroid.show('You have logged out of your account.', ToastAndroid.SHORT);
     navigation.navigate('UserLogin');
   };
+  
 
   if (!user) {
     return <Text>Loading...</Text>;

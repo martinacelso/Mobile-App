@@ -119,6 +119,12 @@ const handleSendCode = async () => {
 const handleSignUp = async () => {
   setErrorMessage(''); // Clear previous error messages
 
+  // Check if OTP has been sent before allowing sign-up
+  if (showOTPField && !enteredOTP) {
+    setErrorMessage('Please press "Send Code" to receive the OTP.');
+    return;
+  }
+
   if (!firstName || !lastName || !email || !password || !confirmPassword || !mobileNumber || !selectedGender || !dob || !address) {
     setErrorMessage('Please fill in all fields.');
     return;

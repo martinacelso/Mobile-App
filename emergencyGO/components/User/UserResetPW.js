@@ -79,7 +79,7 @@ const UserResetPW = ({ navigation, route }) => {
     }
   
     if (!otp) {
-      setErrorMessage('Please enter the OTP sent to your mobile number');
+      setErrorMessage('Enter the OTP sent to your email or mobile number');
       return;
     }
   
