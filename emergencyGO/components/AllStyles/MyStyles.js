@@ -147,7 +147,7 @@ export const MyStyles = StyleSheet.create({
     },
     sendButton: {
         backgroundColor: '#8B0000',
-        width: '25%',
+        width: '23%',
         height: 45,
         borderRadius: 30,
         marginLeft: 5,
