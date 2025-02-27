@@ -17,17 +17,18 @@ const UserLogin = ({ navigation }) => {
     const storedUsers = await AsyncStorage.getItem('users');
     const users = storedUsers ? JSON.parse(storedUsers) : [];
 
-    const foundUser = users.find(user => 
+    const user = users.find(user => 
       user.email === emailOrMobile || user.mobileNumber === emailOrMobile
     );
 
-    if (!foundUser) {
+    if (!user) {
       setErrorMessage('Account not found.');
       return;
     }
 
-    if (foundUser.password === password) {
+    if (user.password === password) {
       setErrorMessage('');
+      await AsyncStorage.setItem('loggedInUser', JSON.stringify(user));
       ToastAndroid.show('Login Successful!', ToastAndroid.SHORT);
       navigation.navigate('UserTabs');
     } else {

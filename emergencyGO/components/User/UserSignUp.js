@@ -171,6 +171,8 @@ const handleSignUp = async () => {
   users.push(newUser);
   await AsyncStorage.setItem('users', JSON.stringify(users));
 
+  await AsyncStorage.setItem('loggedInUser', JSON.stringify(newUser));
+
   ToastAndroid.show('Account Created Successfully!', ToastAndroid.SHORT);
   navigation.navigate('UserLogin');
 
