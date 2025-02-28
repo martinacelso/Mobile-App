@@ -11,6 +11,7 @@ import UserCreateNewPW from './components/User/UserCreateNewPW';
 import UserTabs from './components/User/UserTabs';
 import UserAddContact from './components/User/UserAddContact';
 import UserEditProfile from './components/User/UserEditProfile';
+import Call from './components/Call';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,7 +19,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="UserTabs" screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName="Call" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Welcome" component={Welcome} />
         <Stack.Screen name="UserType" component={UserType} />
         <Stack.Screen name="UserLogin" component={UserLogin} />
@@ -28,6 +29,7 @@ export default function App() {
         <Stack.Screen name="UserTabs" component={UserTabs} />
         <Stack.Screen name="UserAddContact" component={UserAddContact}/>
         <Stack.Screen name="UserEditProfile" component={UserEditProfile}/>
+        <Stack.Screen name="Call" component={Call}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

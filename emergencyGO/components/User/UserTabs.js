@@ -12,7 +12,7 @@ const fetchUserFirstName = async () => {
     const storedUser = await AsyncStorage.getItem('loggedInUser');
     if (storedUser) {
       const user = JSON.parse(storedUser);
-      console.log(`Logged in user: ${user.userId}`); // ✅ Logs the user ID correctly
+      console.log(`Logged in user: ${user.userId}`);
       return user.firstName || 'User';
     }
   } catch (error) {
@@ -145,7 +145,7 @@ const Contacts = ({ navigation }) => {
 
         const user = JSON.parse(storedUser);
         if (!user.userId) return;
-        console.log("Parsed User Data:", user.userId); // Debugging line
+        console.log("Parsed User Data:", user.userId);
 
         const userContactsKey = `${user.userId}_contacts`;
         const storedContacts = await AsyncStorage.getItem(userContactsKey);
@@ -188,10 +188,10 @@ const Contacts = ({ navigation }) => {
               const updatedContacts = contactList.filter(contact => contact.id !== contactId);
               
               console.log("Updated Contacts after deletion:", updatedContacts);
-  
+
               await AsyncStorage.setItem(userContactsKey, JSON.stringify(updatedContacts));
-              setContactPerson([...updatedContacts]); // Ensure state updates
-  
+              setContactPerson([...updatedContacts]);
+
               ToastAndroid.show("Contact deleted successfully!", ToastAndroid.SHORT);
             } catch (error) {
               console.error("Error deleting contact:", error);
@@ -200,7 +200,8 @@ const Contacts = ({ navigation }) => {
         },
       ]
     );
-  };  
+  };
+
 
   return (
     <View style={MyStyles.container}>
@@ -285,8 +286,8 @@ const Profile = ({ navigation }) => {
         const storedUser = await AsyncStorage.getItem('loggedInUser');
         if (storedUser) {
           const parsedUser = JSON.parse(storedUser);
-          console.log('User ID:', parsedUser.userId); // Log user ID
-          console.log('User Data:', parsedUser); // Log full user data
+          console.log('User ID:', parsedUser.userId);
+          console.log('User Data:', parsedUser);
 
           if (!parsedUser.userId) {
             console.error("User ID is missing in stored data.");
@@ -336,8 +337,6 @@ const Profile = ({ navigation }) => {
     </View>
   );
 };
-
-
 
 
 /////////////////////////////FOR CALL
