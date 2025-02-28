@@ -31,7 +31,7 @@ const UserAddContact = ({ navigation, route }) => {
       }
   
       const user = JSON.parse(storedUser);
-      const userContactsKey = `${user.id}_contacts`;
+      const userContactsKey = `${user.userId}_contacts`;
   
       const storedContacts = await AsyncStorage.getItem(userContactsKey);
       const contacts = storedContacts ? JSON.parse(storedContacts) : [];
@@ -49,7 +49,7 @@ const UserAddContact = ({ navigation, route }) => {
           name,
           phone,
           image: require('../../assets/defaultUserPFP.png'),
-          userId: user.id
+          userId: user.userId
         };
         updatedContacts = [...contacts, newContact];
         ToastAndroid.show('Contact added successfully!', ToastAndroid.SHORT);
@@ -63,21 +63,42 @@ const UserAddContact = ({ navigation, route }) => {
   };
   
   
-  const handleDeleteContact = async (contactId) => {
-    console.log("Delete clicked for contact ID: ", contactId);
+  const handleDeleteContact = async () => {
+    try {
+      const storedUser = await AsyncStorage.getItem('loggedInUser');
+      if (!storedUser) {
+        ToastAndroid.show('User not logged in', ToastAndroid.SHORT);
+        return;
+      }
   
-    const updatedContacts = contactPerson.filter(contact => contact.id !== contactId);
-    setContactPerson(updatedContacts);
-  
-    const storedUser = await AsyncStorage.getItem('loggedInUser');
-    if (storedUser) {
       const user = JSON.parse(storedUser);
-      await AsyncStorage.setItem(`${user.id}_contacts`, JSON.stringify(updatedContacts));
+      const userContactsKey = `${user.userId}_contacts`;
+  
+      const storedContacts = await AsyncStorage.getItem(userContactsKey);
+      const contacts = storedContacts ? JSON.parse(storedContacts) : [];
+  
+      const updatedContacts = contacts.filter(contact => contact.id !== contactId);
+  
+      await AsyncStorage.setItem(userContactsKey, JSON.stringify(updatedContacts));
+  
+      ToastAndroid.show('Contact deleted successfully!', ToastAndroid.SHORT);
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error deleting contact:', error);
     }
-  };  
+  };
+  
 
   return (
     <View style={MyStyles.container}>
+            <View style={[MyStyles.row, { alignSelf: 'flex-start', marginLeft: 25, marginBottom:5, marginTop:20 }]}>
+              <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Image source={require('../../assets/backButton.png')} style={[MyStyles.back, {marginRight:25}]} />
+              </TouchableOpacity>
+              <Text style={{ fontSize: 36, fontStyle: 'italic', color: '#8B0000', marginBottom: 15 }}>
+                Emergency<Text style={{ fontWeight: 'bold', fontStyle: 'normal' }}>Go</Text>
+              </Text>
+            </View>
       <Text style={[MyStyles.title, { marginBottom: 10 }]}>
         {contactId ? 'Edit Contact' : 'Add Contact'}
       </Text>
@@ -91,6 +112,7 @@ const UserAddContact = ({ navigation, route }) => {
         value={name}
         onChangeText={setName}
       />
+
       <TextInput
         style={MyStyles.input}
         placeholder="Phone Number"

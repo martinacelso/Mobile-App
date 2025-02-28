@@ -35,6 +35,10 @@ const UserEditProfile = ({ navigation }) => {
       const storedUser = await AsyncStorage.getItem('loggedInUser');
       if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
+        console.log("Fetched User Data:", parsedUser); // Debugging log
+        if (!parsedUser.userId) {
+          console.warn("User ID is missing!");
+        }
         setUser(parsedUser);
         setUpdatedFirstName(parsedUser.firstName);
         setUpdatedLastName(parsedUser.lastName);
@@ -45,7 +49,7 @@ const UserEditProfile = ({ navigation }) => {
       }
     };
     fetchUser();
-  }, []);
+  }, []);  
 
   useEffect(() => {
     if (updatePassword && updateConfirmPassword && updatePassword !== updateConfirmPassword) {
@@ -94,6 +98,11 @@ const UserEditProfile = ({ navigation }) => {
   
 
   const handleEditProfile = async () => {
+    if (!user || !user.userId) {
+      console.error("Error: User ID is missing!");
+      return;
+    }
+
     if (!updateFirstName || !updateLastName || !updateEmail || !updateMobileNumber) {
       setOtpErrorMessage('Please fill in all required fields.');
       return;
@@ -134,6 +143,7 @@ const UserEditProfile = ({ navigation }) => {
     }
   
     const updatedUserData = {
+      userId: user.userId,
       firstName: updateFirstName,
       lastName: updateLastName,
       fullName: `${updateFirstName} ${updateLastName}`,
@@ -142,11 +152,12 @@ const UserEditProfile = ({ navigation }) => {
       gender: user.gender,
       email: updateEmail,
       mobileNumber: updateMobileNumber,
-      password: updatePassword,
+      password: updatePassword || user.password,
     };
   
     try {
       await AsyncStorage.setItem('loggedInUser', JSON.stringify(updatedUserData));
+      console.log("Updated User Data:", updatedUserData);
       ToastAndroid.show('Profile updated successfully!', ToastAndroid.SHORT);
       navigation.navigate('UserTabs');
     } catch (error) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Image, ScrollView, TextInput, ToastAndroid, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ScrollView, TextInput, ToastAndroid, Alert, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { FontAwesome5 } from '@expo/vector-icons';
 import MyStyles from '../AllStyles/MyStyles';
@@ -12,6 +12,7 @@ const fetchUserFirstName = async () => {
     const storedUser = await AsyncStorage.getItem('loggedInUser');
     if (storedUser) {
       const user = JSON.parse(storedUser);
+      console.log(`Logged in user: ${user.userId}`); // ✅ Logs the user ID correctly
       return user.firstName || 'User';
     }
   } catch (error) {
@@ -138,34 +139,25 @@ const Contacts = ({ navigation }) => {
 
   useEffect(() => {
     const fetchContacts = async () => {
-      const storedUser = await AsyncStorage.getItem('loggedInUser');
-      if (storedUser) {
+      try {
+        const storedUser = await AsyncStorage.getItem('loggedInUser');
+        if (!storedUser) return;
+
         const user = JSON.parse(storedUser);
-        setContactPerson([]);
-  
-        const userContactsKey = `${user.id}_contacts`;
-  
+        if (!user.userId) return;
+        console.log("Parsed User Data:", user.userId); // Debugging line
+
+        const userContactsKey = `${user.userId}_contacts`;
         const storedContacts = await AsyncStorage.getItem(userContactsKey);
-        if (storedContacts) {
-          const contacts = JSON.parse(storedContacts);
-  
-          const userContacts = contacts.filter(contact => contact.userId === user.id);
-          setContactPerson(userContacts);
-        }
+        setContactPerson(storedContacts ? JSON.parse(storedContacts) : []);
+      } catch (error) {
+        console.error("Error fetching contacts:", error);
       }
     };
-  
-    const unsubscribe = navigation.addListener('focus', fetchContacts);
-    return () => unsubscribe();
-  }, [navigation]);  
 
-  const handleContactOptions = (contactId) => {
-    if (selectedContactId === contactId) {
-      setSelectedContactId(null);
-    } else {
-      setSelectedContactId(contactId);
-    }
-  };
+    const unsubscribe = navigation.addListener('focus', fetchContacts);
+    return unsubscribe;
+  }, [navigation]);
 
   const handleEditContact = (contactId) => {
     const contact = contactPerson.find(c => c.id === contactId);
@@ -175,18 +167,40 @@ const Contacts = ({ navigation }) => {
   };
 
   const handleDeleteContact = async (contactId) => {
-    console.log("Delete clicked for contact ID: ", contactId);
-    
-    const updatedContacts = contactPerson.filter(contact => contact.id !== contactId);
-    setContactPerson(updatedContacts);
+    Alert.alert(
+      "Delete Contact",
+      "Are you sure you want to delete this contact?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              const storedUser = await AsyncStorage.getItem('loggedInUser');
+              if (!storedUser) return;
   
-    const storedUser = await AsyncStorage.getItem('loggedInUser');
-    if (storedUser) {
-      const user = JSON.parse(storedUser);
-      await AsyncStorage.setItem(`${user.id}_contacts`, JSON.stringify(updatedContacts));
-    }
-  };
+              const user = JSON.parse(storedUser);
+              const userContactsKey = `${user.userId}_contacts`;
   
+              const storedContacts = await AsyncStorage.getItem(userContactsKey);
+              const contactList = storedContacts ? JSON.parse(storedContacts) : [];
+  
+              const updatedContacts = contactList.filter(contact => contact.id !== contactId);
+              
+              console.log("Updated Contacts after deletion:", updatedContacts);
+  
+              await AsyncStorage.setItem(userContactsKey, JSON.stringify(updatedContacts));
+              setContactPerson([...updatedContacts]); // Ensure state updates
+  
+              ToastAndroid.show("Contact deleted successfully!", ToastAndroid.SHORT);
+            } catch (error) {
+              console.error("Error deleting contact:", error);
+            }
+          },
+        },
+      ]
+    );
+  };  
 
   return (
     <View style={MyStyles.container}>
@@ -195,9 +209,7 @@ const Contacts = ({ navigation }) => {
       <ScrollView style={{ width: '100%' }}>
         <View style={{ alignItems: 'center', marginTop: 10 }}>
           {contactPerson.length === 0 ? (
-            <Text style={{ color: '#8B0000', fontSize: 18, marginBottom: 20 }}>
-              No contacts added yet.
-            </Text>
+            <Text style={{ color: '#8B0000', fontSize: 18, marginBottom: 20 }}>No contacts added yet.</Text>
           ) : (
             contactPerson.map((contact) => (
               <View key={contact.id} style={MyStyles.contactCard}>
@@ -207,7 +219,7 @@ const Contacts = ({ navigation }) => {
                   <View style={MyStyles.contactInfo}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Text style={MyStyles.contactName}>{contact.name}</Text>
-                      <TouchableOpacity onPress={() => handleContactOptions(contact.id)}>
+                      <TouchableOpacity onPress={() => setSelectedContactId(selectedContactId === contact.id ? null : contact.id)}>
                         <Image source={require('../../assets/option.png')} style={MyStyles.option} />
                       </TouchableOpacity>
                     </View>
@@ -269,36 +281,42 @@ const Profile = ({ navigation }) => {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const storedUser = await AsyncStorage.getItem('loggedInUser');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+      try {
+        const storedUser = await AsyncStorage.getItem('loggedInUser');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          console.log('User ID:', parsedUser.userId); // Log user ID
+          console.log('User Data:', parsedUser); // Log full user data
+
+          if (!parsedUser.userId) {
+            console.error("User ID is missing in stored data.");
+          }
+
+          setUser(parsedUser);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
       }
     };
-    fetchUser();
-  }, []);
+
+    const unsubscribe = navigation.addListener('focus', fetchUser);
+    return unsubscribe;
+  }, [navigation]);
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem('loggedInUser');
-    
-    const storedUser = await AsyncStorage.getItem('loggedInUser');
-    if (storedUser) {
-      const user = JSON.parse(storedUser);
-      const userContactsKey = `${user.id}_contacts`;
-      await AsyncStorage.removeItem(userContactsKey);
-    }
-  
-    ToastAndroid.show('You have logged out of your account.', ToastAndroid.SHORT);
-    navigation.navigate('UserLogin');
+    console.log('User logged out');
+    ToastAndroid.show('You have logged out.', ToastAndroid.SHORT);
+    navigation.replace('UserLogin');
   };
-  
 
   if (!user) {
     return <Text>Loading...</Text>;
   }
 
   return (
-<View style={MyStyles.container}>
-      <View style={[MyStyles.row, {marginBottom:25, marginTop:15, marginLeft:70 }]}>
+    <View style={MyStyles.container}>
+      <View style={[MyStyles.row, { marginBottom: 25, marginTop: 15, marginLeft: 70 }]}>
         <Text style={[MyStyles.title, { marginBottom: 10 }]}>Profile</Text>
         <TouchableOpacity onPress={() => navigation.navigate('UserEditProfile')}>
           <Image source={require('../../assets/edit.png')} style={MyStyles.edit} />
@@ -306,17 +324,11 @@ const Profile = ({ navigation }) => {
       </View>
       <Image source={require('../../assets/defaultUserPFP.png')} style={MyStyles.userPFP} />
 
-      {user ? (
-        <>
-          <Text style={MyStyles.profileInfo}>{user.firstName} {user.lastName}</Text>
-          <Text style={MyStyles.profileInfo}>{user.gender}</Text>
-          <Text style={MyStyles.profileInfo}>{user.dob}</Text>
-          <Text style={MyStyles.profileInfo}>{user.address}</Text>
-          <Text style={MyStyles.profileInfo}>{user.mobileNumber}</Text>
-        </>
-      ) : (
-        <Text>Loading...</Text>
-      )}
+      <Text style={MyStyles.profileInfo}>{user.firstName} {user.lastName}</Text>
+      <Text style={MyStyles.profileInfo}>{user.gender}</Text>
+      <Text style={MyStyles.profileInfo}>{user.dob}</Text>
+      <Text style={MyStyles.profileInfo}>{user.address}</Text>
+      <Text style={MyStyles.profileInfo}>{user.mobileNumber}</Text>
 
       <TouchableOpacity onPress={handleLogout} style={MyStyles.Sbutton}>
         <Text style={MyStyles.buttonText}>Logout</Text>
@@ -324,6 +336,7 @@ const Profile = ({ navigation }) => {
     </View>
   );
 };
+
 
 
 

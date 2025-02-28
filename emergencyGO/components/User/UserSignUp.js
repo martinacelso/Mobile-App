@@ -117,11 +117,15 @@ const handleSendCode = async () => {
 
 //////////////////////////////////////////FOR SIGN UP VALIDATIONS
 const handleSignUp = async () => {
-  setErrorMessage(''); // Clear previous error messages
+  setErrorMessage('');
 
-  // Check if OTP has been sent before allowing sign-up
-  if (showOTPField && !enteredOTP) {
-    setErrorMessage('Please press "Send Code" to receive the OTP.');
+  if (!generatedOTP) {
+    setErrorMessage('Please press "Send Code" to receive the OTP before signing up.');
+    return;
+  }
+
+  if (!enteredOTP) {
+    setErrorMessage('Please enter the OTP sent to your mobile.');
     return;
   }
 
@@ -140,11 +144,6 @@ const handleSignUp = async () => {
     return;
   }
 
-  if (emailExists && mobileExists) {
-    setErrorMessage('Email and Mobile Number are already in use. Please use different ones.');
-    return;
-  }
-
   if (emailExists) {
     setErrorMessage('Email is already in use. Please use another email.');
     return;
@@ -155,28 +154,38 @@ const handleSignUp = async () => {
     return;
   }
 
+  const storedOTP = await AsyncStorage.getItem(`otp_${mobileNumber}`);
+  if (enteredOTP !== storedOTP) {
+    setOtpError('Invalid OTP. Please try again.');
+    return;
+  } else {
+    setOtpError('');
+  }
+
+  // Generate unique user ID
+  const userId = `USER-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+  // Create new user object
+  const newUser = { 
+    userId, // Assign generated user ID
+    firstName, 
+    lastName, 
+    address, 
+    dob, 
+    gender: selectedGender, 
+    email, 
+    mobileNumber, 
+    password, 
+    contactsHistory: [] // Initialize empty contacts history
+  };
+
+  // Retrieve existing users
   const storedUsers = await AsyncStorage.getItem('users');
   const users = storedUsers ? JSON.parse(storedUsers) : [];
 
-  if (showOTPField) {
-    if (!enteredOTP) {
-      setOtpError('Please enter the OTP sent to your mobile');
-      return;
-    }
-
-    const storedOTP = await AsyncStorage.getItem(`otp_${mobileNumber}`);
-    if (enteredOTP !== storedOTP) {
-      setOtpError('Invalid OTP. Please try again.');
-      return;
-    } else {
-      setOtpError('');
-    }
-  }
-
-  const newUser = { firstName, lastName, address, dob, gender: selectedGender, email, mobileNumber, password };
+  // Add new user and save to storage
   users.push(newUser);
   await AsyncStorage.setItem('users', JSON.stringify(users));
-
   await AsyncStorage.setItem('loggedInUser', JSON.stringify(newUser));
 
   ToastAndroid.show('Account Created Successfully!', ToastAndroid.SHORT);
@@ -219,8 +228,9 @@ const handleSignUp = async () => {
             placeholderTextColor="#ac2e39"
             value={firstName}
             onChangeText={(text) => {
-            setFirstName(text);
-            setErrorMessage('');
+              const formattedFN = text.replace(/\b\w/g, (char) => char.toUpperCase());
+              setFirstName(formattedFN);
+              setErrorMessage('');
             }}
           />
           <TextInput style={{width: 149, 
@@ -241,8 +251,9 @@ const handleSignUp = async () => {
             placeholderTextColor="#ac2e39"
             value={lastName}
             onChangeText={(text) => {
-            setLastName(text);
-            setErrorMessage('');
+              const formattedLN = text.replace(/\b\w/g, (char) => char.toUpperCase());
+              setLastName(formattedLN);
+              setErrorMessage('');
             }}
           />
         </View>
@@ -257,16 +268,48 @@ const handleSignUp = async () => {
           }}
         />
 
-        <TextInput style={MyStyles.input} 
-          placeholder="Date of Birth" 
-          placeholderTextColor="#ac2e39" 
-          value={dob} 
+        <TextInput
+          style={MyStyles.input}
+          placeholder="Birthdate (MM/DD/YYYY)"
+          placeholderTextColor="#ac2e39"
+          keyboardType="numeric"
+          maxLength={10}
+          value={dob}
           onChangeText={(text) => {
-          setDob(text);
-          setErrorMessage('');
+            let rawDate = text.replace(/[^0-9]/g, '');
+
+            let formattedDate = rawDate;
+            if (rawDate.length > 2) {
+              formattedDate = `${rawDate.slice(0, 2)}/${rawDate.slice(2)}`;
+            }
+            if (rawDate.length > 5) {
+              formattedDate = `${formattedDate.slice(0, 5)}/${formattedDate.slice(5)}`;
+            }
+
+            const parts = formattedDate.split('/');
+            const month = parts[0] || ''; 
+            const day = parts[1] || '';
+            const year = parts[2] || '';
+
+            if (formattedDate === '00/00/0000') {
+              return;
+            }
+
+            if (month.length === 2 && (month < '01' || month > '12')) {
+              return;
+            }
+            if (day.length === 2 && (day < '01' || day > '31')) {
+              return;
+            }
+            if (year.length === 4 && (year < '0001' || year > '9999')) {
+              return;
+            }
+
+            setDob(formattedDate);
+            setErrorMessage('');
           }}
         />
-            
+
         <Text style={[MyStyles.leftTextAlign, { color: '#ac2e39', marginBottom: 5 }]}>Gender</Text>
         <View style={{borderWidth: 1, borderColor: '#8B0000', padding: 5, marginBottom: 10, height: 45, width: 305, backgroundColor: 'white'}}>
           <RadioGroup
@@ -284,18 +327,20 @@ const handleSignUp = async () => {
           />
         </View>
 
-        <TextInput style={MyStyles.input} 
-        placeholder="Email Address" 
-        keyboardType="email-address" 
-        placeholderTextColor="#ac2e39"
-        value={email}
-        onChangeText={(text) => {
-          setEmail(text);
+        <TextInput
+          style={MyStyles.input} 
+          placeholder="Email Address" 
+          keyboardType="email-address" 
+          placeholderTextColor="#ac2e39"
+          value={email}
+          onChangeText={(text) => {
+          setEmail(text.toLowerCase());
           setErrorMessage('');
           setEmailExists(false);
           setInvalidEmailDomain(false);
-        }}
-      />
+          }}
+        />
+
       {emailExists && 
         <Text style={{color: 'red', marginBottom: 10, marginRight: 10, marginRight:165}}>Email is already in use</Text>
       }
@@ -323,14 +368,14 @@ const handleSignUp = async () => {
             placeholderTextColor="#ac2e39"
             value={mobileNumber}
             onChangeText={(text) => {
-              setMobileNumber(text);
-              setErrorMessage('');
-              setMobileExists(false);
-              setShowOTPField(false);
-              setGeneratedOTP('');
-              setEnteredOTP('');
-              setIsButtonDisabled(false);
-              setTimer(0);
+            setMobileNumber(text);
+            setErrorMessage('');
+            setMobileExists(false);
+            setShowOTPField(false);
+            setGeneratedOTP('');
+            setEnteredOTP('');
+            setIsButtonDisabled(false);
+            setTimer(0);
             }}
           />
           <TouchableOpacity 
@@ -359,9 +404,9 @@ const handleSignUp = async () => {
               keyboardType="numeric"
               value={enteredOTP}
               onChangeText={(text) => {
-                setEnteredOTP(text);
-                setOtpError('');
-                setErrorMessage('');
+              setEnteredOTP(text);
+              setOtpError('');
+              setErrorMessage('');
               }}
             />
             {otpError !== '' && (
@@ -377,8 +422,8 @@ const handleSignUp = async () => {
           placeholderTextColor="#ac2e39"
           value={password}
           onChangeText={(text) => {
-            setPassword(text);
-            setErrorMessage('');
+          setPassword(text);
+          setErrorMessage('');
           }}
         />
         {password.length > 0 && password.length < 8 && (
@@ -391,8 +436,8 @@ const handleSignUp = async () => {
           placeholderTextColor="#ac2e39"
           value={confirmPassword}
           onChangeText={(text) => {
-            setConfirmPassword(text);
-            setErrorMessage('');
+          setConfirmPassword(text);
+          setErrorMessage('');
           }}
         />
       {passwordMismatch && (

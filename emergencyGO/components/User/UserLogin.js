@@ -13,28 +13,36 @@ const UserLogin = ({ navigation }) => {
       setErrorMessage('Please fill in all fields.');
       return;
     }
-
+  
     const storedUsers = await AsyncStorage.getItem('users');
     const users = storedUsers ? JSON.parse(storedUsers) : [];
-
+  
     const user = users.find(user => 
       user.email === emailOrMobile || user.mobileNumber === emailOrMobile
     );
-
+  
     if (!user) {
       setErrorMessage('Account not found.');
       return;
     }
-
+  
     if (user.password === password) {
       setErrorMessage('');
-      await AsyncStorage.setItem('loggedInUser', JSON.stringify(user));
+  
+      console.log(`User ID: ${user.userId}`); // ✅ Logs the user ID correctly
+  
+      try {
+        await AsyncStorage.setItem('loggedInUser', JSON.stringify(user));
+      } catch (error) {
+        console.error('Error saving user data:', error);
+      }
+  
       ToastAndroid.show('Login Successful!', ToastAndroid.SHORT);
       navigation.navigate('UserTabs');
     } else {
       setErrorMessage('Incorrect password.');
     }
-  };
+  };  
 
   return (
     <View style={MyStyles.container}>
