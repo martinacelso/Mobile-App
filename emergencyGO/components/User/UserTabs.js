@@ -111,15 +111,21 @@ const Activity = ({ navigation }) => {
 
             <View style={{flexDirection: 'row', justifyContent: 'center', marginTop: 10}}>
               <TouchableOpacity 
-                onPress={() => navigation.navigate('Call')}
+                onPress={() => navigation.navigate('Call', { 
+                  name: "Rescue Team", 
+                  photo: require('../../assets/defaultRtPFP.png') 
+                })}
                 style={[MyStyles.cmButton, { backgroundColor: '#8B0000'}]}
               >
                 <Text style={{color: '#FFF', fontWeight: 'bold', textAlign: 'center'}}>Call</Text>
               </TouchableOpacity>
 
               <TouchableOpacity 
-                onPress={() => navigation.navigate('Message')} 
-                style={[MyStyles.cmButton, {backgroundColor: '#c68286', marginLeft: 10, marginRight:15}]}
+                onPress={() => navigation.navigate('Message', { 
+                  name: "Rescue Team", 
+                  photo: require('../../assets/defaultRtPFP.png') 
+                })} 
+                style={[MyStyles.cmButton, { backgroundColor: '#c68286', marginLeft: 10, marginRight: 15 }]}
               >
                 <Text style={{color: '#FFF', fontWeight: 'bold', textAlign: 'center'}}>Message</Text>
               </TouchableOpacity>
@@ -245,14 +251,22 @@ const Contacts = ({ navigation }) => {
                       ) : (
                         <>
                           <TouchableOpacity
-                            onPress={() => {'Call'}}
-                            style={[MyStyles.cmButton2, { backgroundColor: '#8B0000' }]}>
+                            onPress={() => navigation.navigate('Call', { 
+                              name: contact.name, 
+                              photo: contact.image 
+                            })}
+                            style={[MyStyles.cmButton2, { backgroundColor: '#8B0000' }]}
+                          >
                             <Text style={{ color: '#FFF', fontWeight: 'bold', textAlign: 'center' }}>Call</Text>
                           </TouchableOpacity>
 
                           <TouchableOpacity
-                            onPress={() => {'Message'}}
-                            style={[MyStyles.cmButton2, { backgroundColor: '#c68286' }]}>
+                            onPress={() => navigation.navigate('Message', { 
+                              name: contact.name, 
+                              photo: contact.image 
+                            })}
+                            style={[MyStyles.cmButton2, { backgroundColor: '#c68286' }]}
+                          >
                             <Text style={{ color: '#FFF', fontWeight: 'bold', textAlign: 'center' }}>Message</Text>
                           </TouchableOpacity>
                         </>

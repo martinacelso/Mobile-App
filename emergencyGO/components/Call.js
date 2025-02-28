@@ -3,7 +3,9 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import MyStyles from './AllStyles/MyStyles';
 import { Ionicons } from '@expo/vector-icons';
 
-const Call = ({navigation}) => {
+const Call = ({ navigation, route }) => {
+    const { name, photo } = route.params;
+
     const [seconds, setSeconds] = useState(0);
 
     useEffect(() => {
@@ -22,13 +24,13 @@ const Call = ({navigation}) => {
 
     return (
         <View style={[MyStyles.container, { backgroundColor: 'white' }]}> 
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Image source={require('../assets/backButton.png')} style={[MyStyles.back, { marginRight: 260, marginBottom:50 }]} />
-        </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+                <Image source={require('../assets/backButton.png')} style={[MyStyles.back, { marginRight: 260, marginBottom:50 }]} />
+            </TouchableOpacity>
 
-            <View style={[MyStyles.mbox, {marginBottom:50}]}>
-                <Image source={require('../assets/defaultRtPFP.png')} style={MyStyles.rtPFP} />
-                <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'darkred', marginTop: 10 }}>Rescue Team</Text>
+            <View style={[MyStyles.mbox, { marginBottom: 50 }]}>
+                <Image source={photo} style={MyStyles.rtPFP} />
+                <Text style={{ fontSize: 20, fontWeight: 'bold', color: 'darkred', marginTop: 10 }}>{name}</Text>
                 <Text style={{ fontSize: 16, color: 'gray', marginTop: 5 }}>{formatTime(seconds)}</Text>
             </View>
 

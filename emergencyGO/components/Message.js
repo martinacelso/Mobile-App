@@ -3,26 +3,26 @@ import { View, Text, TextInput, TouchableOpacity, FlatList, Image } from 'react-
 import MyStyles from './AllStyles/MyStyles';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 
-const Message = ({navigation}) => {
+const Message = ({ navigation, route }) => {
+    const { name, photo } = route.params;
     const [messages, setMessages] = useState([]);
     const [text, setText] = useState('');
 
     const sendMessage = () => {
         if (text.trim().length > 0) {
-            setMessages([...messages, {id: messages.length.toString(), text, sender: 'user'}]);
+            setMessages([...messages, { id: messages.length.toString(), text, sender: 'user' }]);
             setText('');
         }
     };
-
     return (
         <View style={MyStyles.container}>
             <View style={MyStyles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Image source={require('../assets/backButton.png')} style={[MyStyles.back, {marginRight: 5, marginBottom: 10}]} />
                 </TouchableOpacity>
-                <Image source={require('../assets/defaultUserPFP.png')} style={[MyStyles.profileImage, {marginRight: 15}]} />
-                <Text style={[MyStyles.title, {marginRight: 45}]}>mykhail</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Call')}>
+                <Image source={photo} style={[MyStyles.profileImage, {marginRight: 15}]} />
+                <Text style={[MyStyles.title, { marginRight: 15 }]}>{name}</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Call', { name, photo })}>
                     <FontAwesome name="phone" size={32} color="#ac2e39" />
                 </TouchableOpacity>
             </View>
