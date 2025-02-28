@@ -104,7 +104,7 @@ const Activity = ({ navigation }) => {
         </View>
 
         <View style={MyStyles.locationContainer}>
-          <Image source={require('../../assets/defaultUserPFP.png')} style={MyStyles.locationIcon} />
+          <Image source={require('../../assets/defaultRtPFP.png')} style={MyStyles.locationIcon} />
           <View style={{flex: 1}}>
             <Text style={{color: '#8B0000', fontSize: 20, fontWeight: 'bold'}}>Rescue Team</Text>
             <Text style={{color: '#8B0000', fontSize: 15}}>(5 min away)</Text>
@@ -245,13 +245,13 @@ const Contacts = ({ navigation }) => {
                       ) : (
                         <>
                           <TouchableOpacity
-                            onPress={() => {/* Call Page*/}}
+                            onPress={() => {'Call'}}
                             style={[MyStyles.cmButton2, { backgroundColor: '#8B0000' }]}>
                             <Text style={{ color: '#FFF', fontWeight: 'bold', textAlign: 'center' }}>Call</Text>
                           </TouchableOpacity>
 
                           <TouchableOpacity
-                            onPress={() => {/* Message Page*/}}
+                            onPress={() => {'Message'}}
                             style={[MyStyles.cmButton2, { backgroundColor: '#c68286' }]}>
                             <Text style={{ color: '#FFF', fontWeight: 'bold', textAlign: 'center' }}>Message</Text>
                           </TouchableOpacity>

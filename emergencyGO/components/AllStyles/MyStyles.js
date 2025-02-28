@@ -379,6 +379,15 @@ export const MyStyles = StyleSheet.create({
         marginLeft:50,
         borderColor:'#8B0000',
     },
+    rtPFP: {
+        width: 150,
+        height: 150,
+        margin: 10,
+        marginBottom: 10,
+        borderWidth: 2,
+        borderRadius: 550,
+        borderColor:'#8B0000',
+    },
 });
 
 export default MyStyles

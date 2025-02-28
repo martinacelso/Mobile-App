@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { MyStyles } from './AllStyles/MyStyles';
 
-const UserType = ({ navigation }) => {
+const UserType = ({navigation}) => {
   return (
     <View style={MyStyles.container}>
       <Text style={{ fontSize: 36, fontStyle: 'italic', color: '#8B0000', marginBottom: 20 }}>
