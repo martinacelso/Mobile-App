@@ -90,4 +90,4 @@ const Message = ({ navigation, route }) => {
     );
 };
 
-export default Message;
+export default Message

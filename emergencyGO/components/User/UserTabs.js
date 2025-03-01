@@ -21,6 +21,13 @@ const fetchUserFirstName = async () => {
   return 'User';
 };
 
+const fetchUserData = async () => {
+  const storedUser = await AsyncStorage.getItem('loggedInUser');
+  if (storedUser) {
+    setUser(JSON.parse(storedUser));
+  }
+};
+
 
 /////////////////////////////FOR HOME TAB
 const Home = ({ navigation }) => {
@@ -177,10 +184,8 @@ const Contacts = ({ navigation }) => {
       "Delete Contact",
       "Are you sure you want to delete this contact?",
       [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          onPress: async () => {
+        {text: "Cancel", style: "cancel"},
+        {text: "Delete", onPress: async () => {
             try {
               const storedUser = await AsyncStorage.getItem('loggedInUser');
               if (!storedUser) return;
@@ -192,8 +197,6 @@ const Contacts = ({ navigation }) => {
               const contactList = storedContacts ? JSON.parse(storedContacts) : [];
   
               const updatedContacts = contactList.filter(contact => contact.id !== contactId);
-              
-              console.log("Updated Contacts after deletion:", updatedContacts);
 
               await AsyncStorage.setItem(userContactsKey, JSON.stringify(updatedContacts));
               setContactPerson([...updatedContacts]);
@@ -320,6 +323,7 @@ const Profile = ({ navigation }) => {
 
   const handleLogout = async () => {
     await AsyncStorage.removeItem('loggedInUser');
+    await AsyncStorage.setItem('loggedInUser', JSON.stringify(updatedUser));    
     console.log('User logged out');
     ToastAndroid.show('You have logged out.', ToastAndroid.SHORT);
     navigation.replace('UserLogin');

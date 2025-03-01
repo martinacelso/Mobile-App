@@ -53,4 +53,4 @@ const Call = ({ navigation, route }) => {
     );
 };
 
-export default Call;
+export default Call

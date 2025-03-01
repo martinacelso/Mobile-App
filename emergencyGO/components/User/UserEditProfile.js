@@ -20,22 +20,22 @@ const UserEditProfile = ({ navigation }) => {
   const [passwordLengthError, setPasswordLengthError] = useState('');
   const [emailError, setEmailError] = useState('');
   const [mobileError, setMobileError] = useState('');
-
   const [otp, setOtp] = useState(null);
   const [enteredOtp, setEnteredOtp] = useState('');
   const [otpErrorMessage, setOtpErrorMessage] = useState('');
   const [otpSaveErrorMessage, setOtpSaveErrorMessage] = useState('');
   const [otpSent, setOtpSent] = useState(false);
-
   const [isResendDisabled, setIsResendDisabled] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
+  const [invalidEmailDomain, setInvalidEmailDomain] = useState(false);
+  const validDomains = ['gmail.com','yahoo.com','hotmail.com','aol.com','hotmail.co.uk','hotmail.fr','msn.com','yahoo.fr','wanadoo.fr','orange.fr','comcast.net','yahoo.co.uk','yahoo.com.br','yahoo.co.in','outlook.com','live.com','rediffmail.com','free.fr','gmx.de','web.de','yandex.ru','ymail.com','libero.it','outlook.com','uol.com.br','bol.com.br','mail.ru','cox.net','hotmail.it','sbcglobal.net','sfr.fr','live.fr','verizon.net','live.co.uk','googlemail.com','yahoo.es','ig.com.br','live.nl','bigpond.com','terra.com.br','yahoo.it','neuf.fr','yahoo.de','alice.it','rocketmail.com','att.net','laposte.net','facebook.com','bellsouth.net','yahoo.in','hotmail.es','charter.net','yahoo.ca','yahoo.com.au','rambler.ru','hotmail.de','tiscali.it','shaw.ca','yahoo.co.jp','sky.com','earthlink.net','optonline.net','freenet.de','t-online.de','aliceadsl.fr','virgilio.it','home.nl','qq.com','telenet.be','me.com','yahoo.com.ar','tiscali.co.uk','yahoo.com.mx','voila.fr','gmx.net','mail.com','planet.nl','tin.it','live.it','ntlworld.com','arcor.de','yahoo.co.id','frontiernet.net','hetnet.nl','live.com.au','yahoo.com.sg','zonnet.nl','club-internet.fr','juno.com','optusnet.com.au','blueyonder.co.uk','bluewin.ch','skynet.be','sympatico.ca','windstream.net','mac.com','centurytel.net','chello.nl','live.ca','aim.com','bigpond.net.au', 'school.edu.ph', 'government.gov','school.edu','students.nu-moa.edu.ph','nu-moa.edu.ph'];
 
   useEffect(() => {
     const fetchUser = async () => {
       const storedUser = await AsyncStorage.getItem('loggedInUser');
       if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
-        console.log("Fetched User Data:", parsedUser); // Debugging log
+        console.log("Fetched User Data:", parsedUser);
         if (!parsedUser.userId) {
           console.warn("User ID is missing!");
         }
@@ -51,6 +51,7 @@ const UserEditProfile = ({ navigation }) => {
     fetchUser();
   }, []);  
 
+////////////////FOR PASSWORD
   useEffect(() => {
     if (updatePassword && updateConfirmPassword && updatePassword !== updateConfirmPassword) {
       setUpdatedPasswordMismatch(true);
@@ -59,6 +60,7 @@ const UserEditProfile = ({ navigation }) => {
     }
   }, [updatePassword, updateConfirmPassword]);
 
+/////////////////////////SEND OTP
   const generateOtp = () => {
     if (isResendDisabled) return;
 
@@ -82,54 +84,71 @@ const UserEditProfile = ({ navigation }) => {
     }, 1000);
   };
 
-  const checkIfEmailExists = async (email) => {
-    const existingUsers = [
-      { email: 'existinguser@example.com', mobileNumber: '1234567890' },
-    ];
-    return existingUsers.some(user => user.email === email);
-  };
-  
-  const checkIfMobileNumberExists = async (mobileNumber) => {
-    const existingUsers = [
-      { email: 'existinguser@example.com', mobileNumber: '1234567890' },
-    ];
-    return existingUsers.some(user => user.mobileNumber === mobileNumber);
-  };
-  
+//////////////////////////////////////////////////EDIT PROFILE VALIDATIONS
+  useEffect(() => {
+    if (updateEmail) {
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      const domain = updateEmail.split('@')[1]?.toLowerCase();
+
+      if (!updateEmail.match(emailRegex) || !validDomains.includes(domain)) {
+        setInvalidEmailDomain(true);
+      } else {
+        setEmailError('');
+        setInvalidEmailDomain(false);
+      }
+    } else {
+      setEmailError('');
+      setInvalidEmailDomain(false);
+    }
+  }, [updateEmail]);
+
+  useEffect(() => {
+    const mobileRegex = /^\d{11}$/;
+
+    if (!updateMobileNumber.match(mobileRegex)) {
+      setMobileError('Invalid mobile number.');
+    } else {
+      setMobileError('');
+    }
+  }, [updateMobileNumber]);
 
   const handleEditProfile = async () => {
     if (!user || !user.userId) {
       console.error("Error: User ID is missing!");
       return;
     }
-
+  
     if (!updateFirstName || !updateLastName || !updateEmail || !updateMobileNumber) {
       setOtpErrorMessage('Please fill in all required fields.');
       return;
     }
   
-    const isEmailTaken = await checkIfEmailExists(updateEmail);
-    const isMobileTaken = await checkIfMobileNumberExists(updateMobileNumber);
+    const storedUsers = await AsyncStorage.getItem('users');
+    let users = storedUsers ? JSON.parse(storedUsers) : [];
+
+    const userIndex = users.findIndex(u => u.userId === user.userId);
+    if (userIndex === -1) {
+      console.error("Error: User not found!");
+      return;
+    }
+
+    const isEmailTaken = users.some(u => 
+      u.email.toLowerCase() === updateEmail.toLowerCase() && u.userId !== user.userId
+    );
   
     if (isEmailTaken) {
       setEmailError('This email is already in use.');
+      return;
     } else {
       setEmailError('');
     }
   
+    const isMobileTaken = users.some(u => u.mobileNumber === updateMobileNumber && u.userId !== user.userId);
     if (isMobileTaken) {
       setMobileError('This mobile number is already in use.');
+      return;
     } else {
       setMobileError('');
-    }
-  
-    if (isEmailTaken || isMobileTaken) {
-      return;
-    }
-  
-    if (updatePassword && updatePassword !== updateConfirmPassword) {
-      setOtpErrorMessage('Passwords do not match.');
-      return;
     }
   
     if (otp === null) {
@@ -143,35 +162,43 @@ const UserEditProfile = ({ navigation }) => {
     }
   
     const updatedUserData = {
-      userId: user.userId,
+      ...users[userIndex],
       firstName: updateFirstName,
       lastName: updateLastName,
       fullName: `${updateFirstName} ${updateLastName}`,
       address: updateAddress,
       dob: updateDob,
-      gender: user.gender,
       email: updateEmail,
       mobileNumber: updateMobileNumber,
-      password: updatePassword || user.password,
+      password: updatePassword ? updatePassword : users[userIndex].password,
     };
+  
+    users[userIndex] = updatedUserData;
   
     try {
       await AsyncStorage.setItem('loggedInUser', JSON.stringify(updatedUserData));
+      await AsyncStorage.setItem('users', JSON.stringify(users));
       console.log("Updated User Data:", updatedUserData);
       ToastAndroid.show('Profile updated successfully!', ToastAndroid.SHORT);
       navigation.navigate('UserTabs');
     } catch (error) {
       console.error('Error saving user data:', error);
     }
-  };
+  };  
 
   const handleSaveChanges = () => {
     if (!enteredOtp) {
-      setOtpSaveErrorMessage('Save changes by entering the OTP sent to your mobile number. Press the [Send Code] button now.');
+      setOtpSaveErrorMessage('Verify your phone number before saving changes.');
       return;
     }
+    if (enteredOtp !== otp) {
+      setOtpErrorMessage('Invalid OTP entered.');
+      return;
+    }
+    setOtpSaveErrorMessage('');
     handleEditProfile();
   };
+  
 
   const handlePasswordValidation = () => {
     if (currentPassword !== user.password) {
@@ -179,7 +206,7 @@ const UserEditProfile = ({ navigation }) => {
     } else {
       setPasswordError('');
     }
-  
+
     if (updatePassword && updatePassword.length < 8) {
       setPasswordLengthError('Password must be at least 8 characters long.');
     } else {
@@ -256,8 +283,17 @@ const UserEditProfile = ({ navigation }) => {
         keyboardType="email-address"
         placeholderTextColor="#ac2e39"
         value={updateEmail}
-        onChangeText={setUpdatedEmail}
+        onChangeText={(text) => {
+        setUpdatedEmail(text.toLowerCase());
+        }}
       />
+
+      {emailError ? (
+        <Text style={{ color: 'red', fontSize: 12, marginBottom: 10 }}>{emailError}</Text>) : null
+      }
+      {invalidEmailDomain && 
+        <Text style={{color: 'red', marginBottom: 10, marginRight: 10, marginRight:170}}>Invalid email address</Text>
+      }
 
       <TextInput
         style={MyStyles.input}
@@ -266,8 +302,8 @@ const UserEditProfile = ({ navigation }) => {
         placeholderTextColor="#ac2e39"
         value={currentPassword}
         onChangeText={(text) => {
-          setCurrentPassword(text);
-          setIsPasswordDisabled(text === '');
+        setCurrentPassword(text);
+        setIsPasswordDisabled(text === '');
         }}
         onBlur={handlePasswordValidation}
       />
@@ -281,16 +317,14 @@ const UserEditProfile = ({ navigation }) => {
             placeholderTextColor="#ac2e39"
             value={updatePassword}
             onChangeText={(text) => {
-              setUpdatedPassword(text);
-              handlePasswordValidation();
-              setIsPasswordDisabled(text === '');
+            setUpdatedPassword(text);
+            handlePasswordValidation();
+            setIsPasswordDisabled(text === '');
             }}
             editable={!isPasswordDisabled}
           />
           {passwordLengthError && (
-            <Text style={{ color: 'red', fontSize: 14, marginBottom: 10, marginRight: 5 }}>
-              {passwordLengthError}
-            </Text>
+            <Text style={{ color: 'red', fontSize: 14, marginBottom: 10, marginRight: 5 }}>{passwordLengthError}</Text>
           )}
 
           <TextInput
@@ -302,37 +336,52 @@ const UserEditProfile = ({ navigation }) => {
             onChangeText={setUpdatedConfirmPassword}
             editable={!isPasswordDisabled}
           />
-          {updatedPasswordMismatch && (
-            <Text style={{ color: 'red', fontSize: 12, marginBottom: 10, marginRight: 165 }}>Passwords do not match</Text>
+          {updatedPasswordMismatch && (<Text style={{color: 'red', fontSize: 14, marginBottom: 5, marginRight: 165}}>Passwords do not match</Text>
           )}
         </>
       )}
 
       {passwordError ? (
-        <Text style={{ color: 'red', fontSize: 12, marginBottom: 10, marginRight: 100 }}>
-          {passwordError}
-        </Text>
-      ) : null}
+        <Text style={{ color: 'red', fontSize: 14, marginBottom: 10, marginRight: 75 }}>{passwordError}</Text>) : null
+      }
 
       <View style={MyStyles.row}>
-        <TextInput
-          style={{ width: 213, height: 45, borderWidth: 1, borderColor: '#8B0000', paddingLeft: 10, marginRight: 5, marginBottom: 10, backgroundColor: 'white', color: '#ac2e39', shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 5, elevation: 5 }}
-          placeholder="Mobile Number"
-          keyboardType="numeric"
-          placeholderTextColor="#ac2e39"
-          value={updateMobileNumber}
-          onChangeText={setUpdatedMobileNumber}
-        />
+      <TextInput
+        style={{
+        width: 218,
+        height: 45,
+        borderWidth: 1,
+        borderColor: '#8B0000',
+        paddingLeft: 10,
+        marginBottom: 10,
+        backgroundColor: 'white',
+        color: '#ac2e39',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        elevation: 5,
+        }}
+        placeholder="Mobile Number"
+        keyboardType="numeric"
+        placeholderTextColor="#ac2e39"
+        value={updateMobileNumber}
+        onChangeText={(text) => {
+        setUpdatedMobileNumber(text);
+        setMobileError('');
+        }}
+      />
         <TouchableOpacity
           onPress={generateOtp}
           style={[MyStyles.sendButton, { backgroundColor: isResendDisabled ? '#c68286' : '#8B0000' }]}
           disabled={isResendDisabled}
         >
-          <Text style={MyStyles.sendButtonText}>
-            {isResendDisabled ? `Resend in ${resendTimer}s` : 'Send Code'}
-          </Text>
+          <Text style={MyStyles.sendButtonText}>{isResendDisabled ? `Resend in ${resendTimer}s` : 'Send Code'}</Text>
         </TouchableOpacity>
       </View>
+
+    {mobileError ? (<Text style={{ color: 'red', fontSize: 14, marginBottom: 5, marginRight: 160 }}>{mobileError}</Text>) : null
+    }
 
       {otpSent && (
         <TextInput
@@ -346,7 +395,7 @@ const UserEditProfile = ({ navigation }) => {
       )}
 
       {otpErrorMessage ? (
-        <Text style={{ color: 'red', fontSize: 12, marginBottom: 10 }}>
+        <Text style={{ color: 'red', fontSize: 14, marginBottom: 5, marginRight: 180 }}>
           {otpErrorMessage}
         </Text>
       ) : null}
@@ -355,10 +404,8 @@ const UserEditProfile = ({ navigation }) => {
         <Text style={MyStyles.buttonText}>Save Changes</Text>
       </TouchableOpacity>
       {otpSaveErrorMessage ? (
-        <Text style={{ color: 'red', fontSize: 14, marginBottom: 10, textAlign: 'center' }}>
-          {otpSaveErrorMessage}
-        </Text>
-      ) : null}
+        <Text style={{ color: 'red', fontSize: 14, marginBottom: 10, textAlign: 'center' }}>{otpSaveErrorMessage}</Text>) : null
+      }
     </ScrollView>
   );
 };
