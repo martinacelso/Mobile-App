@@ -265,8 +265,9 @@ const Contacts = ({ navigation }) => {
 
                           <TouchableOpacity
                             onPress={() => navigation.navigate('Message', { 
-                              name: contact.name, 
-                              photo: contact.image 
+                                name: contact.name, 
+                                photo: contact.image,
+                                phone: contact.phone
                             })}
                             style={[MyStyles.cmButton2, { backgroundColor: '#c68286' }]}
                           >
@@ -322,12 +323,16 @@ const Profile = ({ navigation }) => {
   }, [navigation]);
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem('loggedInUser');
-    await AsyncStorage.setItem('loggedInUser', JSON.stringify(updatedUser));    
-    console.log('User logged out');
-    ToastAndroid.show('You have logged out.', ToastAndroid.SHORT);
-    navigation.replace('UserLogin');
+    try {
+      await AsyncStorage.removeItem('loggedInUser');
+      console.log('User logged out');
+      ToastAndroid.show('You have logged out of your account.', ToastAndroid.SHORT);
+      navigation.replace('UserLogin');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
+  
 
   if (!user) {
     return <Text>Loading...</Text>;

@@ -120,12 +120,12 @@ const handleSignUp = async () => {
   setErrorMessage('');
 
   if (!generatedOTP) {
-    setErrorMessage('Please press "Send Code" to receive the OTP before signing up.');
+    setErrorMessage('Please verify your mobile number before signing up.');
     return;
   }
 
   if (!enteredOTP) {
-    setErrorMessage('Please enter the OTP sent to your mobile.');
+    setErrorMessage('Please enter the OTP sent to your mobile number.');
     return;
   }
 

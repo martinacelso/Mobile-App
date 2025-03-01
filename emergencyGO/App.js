@@ -20,7 +20,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="UserTabs" screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName="Welcome" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Welcome" component={Welcome} />
         <Stack.Screen name="UserType" component={UserType} />
         <Stack.Screen name="UserLogin" component={UserLogin} />

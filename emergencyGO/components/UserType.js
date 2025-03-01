@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert } from 'react-native';
 import { MyStyles } from './AllStyles/MyStyles';
 
 const UserType = ({navigation}) => {
@@ -16,7 +16,7 @@ const UserType = ({navigation}) => {
         <Text style={MyStyles.buttonText}>USER</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => alert('Rescue Team Sign-In Coming Soon!')} style={MyStyles.Sbutton}>
+      <TouchableOpacity onPress={() =>  Alert.alert("EmergencyGO",'Rescue Team Login Coming Soon!')} style={MyStyles.Sbutton}>
         <Text style={MyStyles.buttonText}>RESCUE TEAM</Text>
       </TouchableOpacity>
     </View>

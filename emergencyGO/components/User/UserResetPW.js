@@ -74,7 +74,7 @@ const UserResetPW = ({ navigation, route }) => {
 ////////////////////////////////////FOR OTP AND CONTINUE BUTTON VERIFICATION
   const verifyOtp = () => {
     if (!userExists) {
-      setErrorMessage('Please request an OTP first');
+      setErrorMessage('Verify your email or mobile number first');
       return;
     }
   
