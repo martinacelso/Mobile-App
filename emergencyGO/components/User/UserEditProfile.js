@@ -410,4 +410,4 @@ const UserEditProfile = ({ navigation }) => {
   );
 };
 
-export default UserEditProfile;
+export default UserEditProfile

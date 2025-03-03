@@ -105,4 +105,4 @@ const UserCreateNewPW = ({ navigation, route }) => {
   );
 };
 
-export default UserCreateNewPW;
+export default UserCreateNewPW

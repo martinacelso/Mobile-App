@@ -20,7 +20,6 @@ export const MyStyles = StyleSheet.create({
         alignItems:'center',
         flexDirection: 'column',
     },
-    
     TabContainer: {
         flex: 1,
         alignItems: 'center',
@@ -44,7 +43,6 @@ export const MyStyles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 5,
         elevation: 5,
-        
     },
     title: { 
         fontSize: 25, 
